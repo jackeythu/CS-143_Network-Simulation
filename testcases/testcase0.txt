@@ -2,12 +2,12 @@
 
 // FORMAT
 
-// data_size:   MB
-// starttime:	s
+// data_amt:    MB
+// start:	s
 
-// capacity: 	Mbps
+// rate: 	Mbps
 // delay:	ms
-// buffer_size: kB
+// buffer:	kB
 
 Host
 	ID 		H1
@@ -20,13 +20,13 @@ Flow
 	ID		F1
 	src		H1
 	dst		H2
-	data_size	10
-	starttime	1.0
+	data_amt	20
+	start		1.0
 	
 Link
 	ID 		L1
-	capacity	10
-     	delay		20
-	buffer_size 	64
+	rate		10
+     	delay		10
+	buffer	 	64
 	connection	H1 H2
 	
