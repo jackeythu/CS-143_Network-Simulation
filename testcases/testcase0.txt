@@ -1,0 +1,32 @@
+// testcase0
+
+// FORMAT
+
+// data_size:   MB
+// starttime:	s
+
+// capacity: 	Mbps
+// delay:	ms
+// buffer_size: kB
+
+Host
+	ID 		H1
+	IP		192.168.1.1
+
+	ID		H2
+	IP 		192.168.1.2
+
+Flow
+	ID		F1
+	src		H1
+	dst		H2
+	data_size	10
+	starttime	1.0
+	
+Link
+	ID 		L1
+	capacity	10
+     	delay		20
+	buffer_size 	64
+	connection	H1 H2
+	
