@@ -34,7 +34,7 @@ Flow
 	src		H1
 	dst		H2
 	data_amt	20
-	start		1.0
+	start		0.5
 	
 Link
 	ID 		L0
