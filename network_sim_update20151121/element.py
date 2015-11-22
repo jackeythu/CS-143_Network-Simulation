@@ -1,10 +1,12 @@
-from network_sim.events import *
-from network_sim.constants import PACKET_SIZE
-from network_sim.constants import ACK_PACKET_SIZE
-from network_sim.constants import ROUTER_PACKET_GENERATION_INTERVAL
+from events import *
+from constants import PACKET_SIZE
+from constants import ACK_PACKET_SIZE
+from constants import ROUTER_PACKET_GENERATION_INTERVAL
 
 import collections
 import copy
+
+BIT_TO_PKT_SCALOR = 10e6/(1024*8)
 
 '''
     Definition for Packet
@@ -106,9 +108,10 @@ class Link(Element):
             [Zilong]
             Use two buffers to enable double-directional transmission
         '''
-        self.buffer1 = Buffer(buffer_size)
-        self.buffer2 = Buffer(buffer_size)
+        self.buffer1 = Buffer(self.engine, buffer_size, self)
+        self.buffer2 = Buffer(self.engine, buffer_size, self)
         self.busy = False
+        #self.engine.recorder.record_link_rate(self, engine.getCurrentTime(), 0)
         self.attachToNode(node1)
         self.attachToNode(node2)
         
@@ -141,8 +144,11 @@ class Link(Element):
     def decide(self):
         lg1 = self.buffer1.bytes; lg2 = self.buffer2.bytes
         if lg1 == 0 and lg2 == 0:
-            return 
+            return
         
+        self.busy = True
+        #self.engine.recorder.record_link_rate(self, self.engine.getCurrentTime(), self.rate)
+        self.engine.recorder.record_link_rate(self, self.engine.getCurrentTime(), self.rate)
         popper = None
         receiver = None
         if lg1>lg2:
@@ -165,32 +171,44 @@ class Link(Element):
         event2 = Event(self.engine.curTime+costTime, self, EVENT_LINK_AVAILABLE)
         self.engine.push_event(event2)
         
-        self.busy = True #???why put it in the end???
+        
             
     def react_to_link_available(self, event):
 #         print "{} link available".format(self.name)
         self.busy = False
+        self.engine.recorder.record_link_rate(self, self.engine.getCurrentTime(), 0)
         self.decide()
         
-class Buffer():
-    def __init__(self, buffer_size):
+class Buffer(Element):
+    def __init__(self, engine, buffer_size, link):
+        super(Buffer,self).__init__(engine)
         self.buffer = collections.deque()
         self.bytes = 0
         self.buffer_size = buffer_size
+        self.link = link
+        self.loss = 0
         
     
     def push(self, packet):
         
         if self.bytes + packet.packetsize <= self.buffer_size:
+            print "use buffer"
             self.buffer.append(packet)
             self.bytes += packet.packetsize
+            self.loss = 0
+            self.engine.recorder.record_packet_loss(self.link, self.engine.getCurrentTime(), self.loss)
+            self.engine.recorder.record_buffer_occupancy(self.link, self.engine.getCurrentTime(), self.bytes)
         else:
             '''
                 [Zilong]
                 Handle packet lost here
             '''
+            self.loss += 1
+           
+            self.engine.recorder.record_packet_loss(self.link, self.engine.getCurrentTime(), self.loss)
+            self.engine.recorder.record_buffer_occupancy(self.link, self.engine.getCurrentTime(), self.bytes)
             print 'Packet Lost: [{}],'.format(packet.pck_id)
-            
+         
     def pop(self):
         if self.bytes == 0 :
             print "Buffer underflow"
@@ -422,6 +440,12 @@ class Flow(Element):
     def destinationReceive(self,packet):      
         ack_packet = self.generateAckPacket(packet)
         self.destinationSend(ack_packet)
+        self.engine.recorder.record_flow_rate(self, self.engine.getCurrentTime(), PACKET_SIZE * BIT_TO_PKT_SCALOR)
+        packet_delay = self.engine.getCurrentTime() - packet.timestamp
+        print '------------'
+        print packet_delay
+       
+        self.engine.recorder.record_packet_delay(self, self.engine.getCurrentTime(), packet_delay)
             
     def react_to_time_out(self):
         pass
