@@ -1,6 +1,7 @@
-from network_sim.events import * 
-from network_sim.element import  *
-from network_sim.engine import *
+from events import * 
+from element import  *
+from engine import *
+import matplotlib.pyplot as plt
 
 def main():
     
@@ -20,10 +21,17 @@ def main():
         delay = 0.01, rate = 10e6, buffer_size = 64e3
     '''
     link1 = Link(engine, 'l1', host1, host2, 0.01, 10e6, 64 * 1024)
-    engine.push_event(Event(1, flow1, EVENT_FLOW_START))
+    engine.push_event(Event(0.5, flow1, EVENT_FLOW_START))
     
     engine.run()
-
+    
+    #engine.recorder.draw(engine.recorder.category['cate_link_rate']['l1'])
+    #engine.recorder.draw(engine.recorder.category['cate_flow_rate']['f1'])
+    #engine.recorder.draw(engine.recorder.category['cate_packet_delay']['f1'])
+    #engine.recorder.draw(engine.recorder.category['cate_buffer_occupancy']['l1']) 
+    engine.recorder.draw(engine.recorder.category['cate_packet_loss']['l1'])
+    
+    plt.show()
 
 if __name__ == '__main__':
     main()
