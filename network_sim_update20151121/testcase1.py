@@ -1,6 +1,7 @@
-from network_sim.events import * 
-from network_sim.element import  *
-from network_sim.engine import SimEngine
+from events import * 
+from element import  *
+from engine import SimEngine
+import matplotlib.pyplot as plt
 
 def main():
         
@@ -36,6 +37,32 @@ def main():
         print engine.queue
         
         engine.run()
+        #engine.recorder.draw(engine.recorder.category['cate_link_rate']['l0'])
+        #engine.recorder.draw(engine.recorder.category['cate_link_rate']['l1'])
+        #engine.recorder.draw(engine.recorder.category['cate_link_rate']['l2'])
+        #engine.recorder.draw(engine.recorder.category['cate_link_rate']['l3'])
+        #engine.recorder.draw(engine.recorder.category['cate_link_rate']['l4'])
+        #engine.recorder.draw(engine.recorder.category['cate_link_rate']['l5'])
+        
+        #engine.recorder.draw(engine.recorder.category['cate_flow_rate']['f1'])
+        
+        #engine.recorder.draw(engine.recorder.category['cate_packet_delay']['f1'])
+        
+        engine.recorder.draw(engine.recorder.category['cate_buffer_occupancy']['l0']) 
+        #engine.recorder.draw(engine.recorder.category['cate_buffer_occupancy']['l1']) 
+        #engine.recorder.draw(engine.recorder.category['cate_buffer_occupancy']['l2']) 
+        #engine.recorder.draw(engine.recorder.category['cate_buffer_occupancy']['l3']) 
+        #engine.recorder.draw(engine.recorder.category['cate_buffer_occupancy']['l4']) 
+        #engine.recorder.draw(engine.recorder.category['cate_buffer_occupancy']['l5']) 
+        
+        #engine.recorder.draw(engine.recorder.category['cate_packet_loss']['l0'])
+        #engine.recorder.draw(engine.recorder.category['cate_packet_loss']['l1'])
+        #engine.recorder.draw(engine.recorder.category['cate_packet_loss']['l2'])
+        #engine.recorder.draw(engine.recorder.category['cate_packet_loss']['l3'])
+        #engine.recorder.draw(engine.recorder.category['cate_packet_loss']['l4'])
+        #engine.recorder.draw(engine.recorder.category['cate_packet_loss']['l5'])
+        
+        plt.show()
 
 if __name__ == '__main__':
     main()
