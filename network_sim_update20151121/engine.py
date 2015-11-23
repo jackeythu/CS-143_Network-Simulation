@@ -3,12 +3,13 @@
 '''
 
 import heapq
-
+import record
 class SimEngine:
     def __init__(self, maxtime):
         self.queue = []
         self.MAXTIME = maxtime
         self.curTime = 0
+        self.recorder = record.Record()
         
     def getCurrentTime(self):
         return self.curTime

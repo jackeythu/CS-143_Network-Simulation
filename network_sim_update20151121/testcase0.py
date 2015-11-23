@@ -2,6 +2,7 @@ from events import *
 from element import  *
 from engine import *
 import matplotlib.pyplot as plt
+import tcp_fast
 
 def main():
     
@@ -14,7 +15,7 @@ def main():
         [Zilong]
         Flow of 20 packets here, but end only sending out one packet
     '''
-    flow1 = Flow(engine, 'f1', host1, host2, 20)
+    flow1 = Flow(engine, 'f1', host1, host2, 20, tcp_fast.TcpFast())
     
     '''
         [Zilong]

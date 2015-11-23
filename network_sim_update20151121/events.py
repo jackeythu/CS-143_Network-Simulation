@@ -2,7 +2,7 @@
 
 EVENT_LINK_AVAILABLE = 'LinkAvailable'
 EVENT_PACKET_RECEIPT = 'PacketReceipt'
-# EVENT_ROUTINGTABLE_OUTDATED = 'RoutingTableOutdated'
+EVENT_ROUTINGTABLE_OUTDATED = 'RoutingTableOutdated'
 EVENT_PACKET_TIMEOUT = 'PacketTimeOut'
 EVENT_FLOW_START = 'FlowStart'
 EVENT_ROUTINGTABLE_UPDATE = 'RoutingTableUpdate'
@@ -24,8 +24,8 @@ class Event:
             self.reactor.react_to_link_available(self)
         if (self.type == EVENT_PACKET_RECEIPT):
             self.reactor.react_to_packet_receipt(self)
-#         if (self.type == EVENT_ROUTINGTABLE_OUTDATED):
-#             self.reactor.react_to_routing_table_outdated(self)
+        if (self.type == EVENT_ROUTINGTABLE_OUTDATED):
+            self.reactor.react_to_routing_table_outdated(self)
         if (self.type == EVENT_ROUTINGTABLE_UPDATE):
             self.reactor.react_to_routing_table_update(self)
         if (self.type == EVENT_PACKET_TIMEOUT):
@@ -43,6 +43,10 @@ class Event:
 #         print 'CreateEventPacketReceipt, [{}] received at: [{}] '.format(reactor.name, time)
         event.packet = packet
         return event 
+    @staticmethod
+    def CreateEventPacketTimeOut(time, reactor):
+        event = Event(time, reactor, EVENT_PACKET_TIMEOUT)
+        return event
         
 '''
     [Zilong]
