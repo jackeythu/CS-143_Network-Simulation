@@ -4,6 +4,7 @@
 
 import heapq
 import record
+
 class SimEngine:
     def __init__(self, maxtime):
         self.queue = []

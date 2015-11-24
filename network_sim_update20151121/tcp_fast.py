@@ -1,5 +1,6 @@
 import collections
 import events
+
 class TcpFast():
     def __init__(self):
         self.alpha = 8
@@ -37,8 +38,6 @@ class TcpFast():
         while len(self.onTheFly) > 0 and self.onTheFly[0] <= self.lastACKID:
             self.onTheFly.popleft()
             
-        
-        
     def setTimeOutEvent(self, time):
         event = events.Event.CreateEventPacketTimeOut(time, self)
         self.validTimeOutEvent = event
@@ -50,9 +49,7 @@ class TcpFast():
     def react_to_time_out(self, event):
         if event != self.validTimeOutEvent:
             return
-        
-        
-        
+
     def react_to_ack(self, packet):
         self.receiveACK(packet)
         self.sendNewPackets()

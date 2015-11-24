@@ -6,8 +6,8 @@ CATE_WINDOW_SIZE = "cate_window_size"
 CATE_PACKET_DELAY = "cate_packet_delay"
 CATE_ALL = [CATE_LINK_RATE, CATE_PACKET_LOSS, CATE_BUFFER_OCCUPANCY, CATE_FLOW_RATE, CATE_WINDOW_SIZE, CATE_PACKET_DELAY]
 
-
 import matplotlib.pyplot as plt
+from constants import *
 
 class Record(object):
     def __init__(self):
@@ -61,13 +61,46 @@ class Record(object):
        
     #def record_window_size(self, element, time, windowsize): 
      #   self.record(CATE_LINK_RATE, element, time, windowsize)
-        
-    def draw(self, content):
+    
+    def draw(self, content, plot_n, title, file_name, xlabel, ylabel):
 
-        x,y = zip(*content) 
+        x,y = zip(*content)
+        
+        plt.figure(plot_n)
         plt.plot(x,y)
-            
+        plt.title(title)
+        plt.xlabel(xlabel)
+        plt.ylabel(ylabel)
+        file_name = DIR_IMG + file_name
+        plt.savefig(file_name)
     
-            
-    
-    
+    '''
+        Plot specifying ymin and ymax
+    '''
+    def draw_minmax(self, content, plot_n, title, file_name, xlabel, ylabel, ymin, ymax):
+
+        x,y = zip(*content)
+        
+        plt.figure(plot_n)
+        plt.plot(x,y)
+        plt.title(title)
+        plt.xlabel(xlabel)
+        plt.ylabel(ylabel)
+        plt.ylim(ymin, ymax)
+        file_name = DIR_IMG + file_name
+        plt.savefig(file_name)
+    '''
+        Plot specifying xfactor and yfactor
+        e.g. transform from bytes to pkts
+    '''
+    def draw_factor(self, content, plot_n, title, file_name, xlabel, ylabel, xfactor, yfactor):
+
+        x,y = zip(*content)
+        
+        plt.figure(plot_n)
+        plt.plot(x / xfactor, y / yfactor)
+        plt.title(title)
+        plt.xlabel(xlabel)
+        plt.ylabel(ylabel)
+        file_name = DIR_IMG + file_name
+        plt.savefig(file_name)

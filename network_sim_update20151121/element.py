@@ -1,13 +1,13 @@
 from events import *
-from constants import PACKET_SIZE
-from constants import ACK_PACKET_SIZE
-from constants import ROUTER_PACKET_GENERATION_INTERVAL
+from constants import *
 
 import collections
 import copy
 import heapq
 
-BIT_TO_PKT_SCALOR = 10e6/(1024*8)
+BIT_TO_PKT_SCALOR = 10 * 1024 * 1024 / PACKET_SIZE
+
+# BIT_TO_PKT_SCALOR = 10e6 / 64e3
 
 '''
     Definition for Packet
@@ -486,13 +486,7 @@ class Flow(Element):
         self.tcp.react_to_time_out(event)
     
     def react_to_flow_start(self, event):
-        '''
-            [Zilong]
-            Fixed a bug here.
-            Add a while loop here to enable multiple packets sending
-            Original: packet = self.generatePacket()
-                      self.sourceSend(packet)
-        '''
+
         #print "--[{}]--".format(self.engine.curTime)
         self.tcp.react_to_flow_start(event)
 
