@@ -4,6 +4,7 @@ from engine import SimEngine
 
 import matplotlib.pyplot as plt
 import tcp_fast
+import tcp_tahoe
 
 def main():
         
@@ -29,7 +30,7 @@ def main():
         host1 = Host(engine, 'H1', '192.168.0.1')   
         host2 = Host(engine, 'H2', '192.168.0.2')
         
-        flow1 = Flow(engine, 'F1', host1, host2, 20 * 1024 * 1024 / PACKET_SIZE, tcp_fast.TcpFast())
+        flow1 = Flow(engine, 'F1', host1, host2, 20 * 1024 * 1024 / PACKET_SIZE, tcp_tahoe.TcpTahoe())
         
         router1 = Router(engine, 'R1', '192.168.1.1')
         router2 = Router(engine, 'R2', '192.168.1.2')
@@ -42,13 +43,6 @@ def main():
         link3 = Link(engine, 'L3', router2, router4, 0.01, 10 * 1024 * 1024, 64 * 1024)
         link4 = Link(engine, 'L4', router3, router4, 0.01, 10 * 1024 * 1024, 64 * 1024)
         link5 = Link(engine, 'L5', host2, router4, 0.01, 12.5 * 1024 * 1024, 64 * 1024)
-
-#         link0 = Link(engine, 'L0', host1, router1, 0.01, 10e6, 64e3)
-#         link1 = Link(engine, 'L1', router1, router2, 0.01, 10e6, 64e3)
-#         link2 = Link(engine, 'L2', router1, router3, 0.01, 10e6, 64e3)
-#         link3 = Link(engine, 'L3', router2, router4, 0.01, 10e6, 64e3)
-#         link4 = Link(engine, 'L4', router3, router4, 0.01, 10e6, 64e3)
-#         link5 = Link(engine, 'L5', host2, router4, 0.01, 10e6, 64e3)
                 
         engine.push_event(Event(0.5, flow1, EVENT_FLOW_START))
                 
@@ -70,6 +64,22 @@ def main():
         '''
         plot_n = 1;
         
+        for i in range(1, 2):
+            cur_variable = 'cate_window_size'
+            cur_name = 'F' + str(i)
+            cur_string = cur_variable + '_' + cur_name
+            engine.recorder.draw(engine.recorder.category[cur_variable][cur_name], plot_n,
+                                 cur_string, cur_string, 'Time / s', 'Window Size / pkts')
+            plot_n = plot_n + 1 
+
+        for i in range(1, 2):
+            cur_variable = 'cate_pkts_received'
+            cur_name = 'F' + str(i)
+            cur_string = cur_variable + '_' + cur_name
+            engine.recorder.draw(engine.recorder.category[cur_variable][cur_name], plot_n,
+                                 cur_string, cur_string, 'Time / s', 'Packets Received / pkts')
+            plot_n = plot_n + 1 
+            
         for i in range(1, 2):
             cur_variable = 'cate_flow_rate'
             cur_name = 'F' + str(i)
