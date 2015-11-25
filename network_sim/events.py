@@ -1,11 +1,4 @@
-#from network_sim.actor import Router
-
-EVENT_LINK_AVAILABLE = 'LinkAvailable'
-EVENT_PACKET_RECEIPT = 'PacketReceipt'
-EVENT_ROUTINGTABLE_OUTDATED = 'RoutingTableOutdated'
-EVENT_PACKET_TIMEOUT = 'PacketTimeOut'
-EVENT_FLOW_START = 'FlowStart'
-EVENT_ROUTINGTABLE_UPDATE = 'RoutingTableUpdate'
+from constants import *
 
 class Event:
 
@@ -36,32 +29,15 @@ class Event:
     @staticmethod
     def CreateEventPacketReceipt(time, reactor, packet):
         event = Event(time, reactor, EVENT_PACKET_RECEIPT)
-        '''
-            [Zilong]
-            Why does the event has a variable packet here?
-        '''
-#         print 'CreateEventPacketReceipt, [{}] received at: [{}] '.format(reactor.name, time)
         event.packet = packet
         return event 
+    
     @staticmethod
-    def CreateEventPacketTimeOut(time, reactor):
+    def CreateEventPacketTimeOut(time, reactor, pck_id):
         event = Event(time, reactor, EVENT_PACKET_TIMEOUT)
+        event.pck_id = pck_id
         return event
-        
-'''
-    [Zilong]
-    Why we need a separate class Reactor.
-    All the event actions should be handled in each Class?
-'''
-# class Reactor:
-#     def __init__(self, name):
-#         self.name = name
-# 
-#     def react_to_event_a(self):
-#         print 'Reactor: [{}] is reacting to event [{}]'.format(self.name, 'event_a')
-# 
-#     def react_to_event_b(self):
-#         print 'Reactor: [{}] is reacting to event [{}]'.format(self.name, 'event_b')
-# 
-#     def react_to_event_c(self):    
-#         print 'Reactor: [{}] is reacting to event [{}]'.format(self.name, 'event_b')
+
+
+
+

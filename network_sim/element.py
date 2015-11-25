@@ -1,13 +1,12 @@
 from events import *
 from constants import *
+from tcp_tahoe import TcpTahoe
 
 import collections
 import copy
 import heapq
 
 BIT_TO_PKT_SCALOR = 10 * 1024 * 1024 / PACKET_SIZE
-
-# BIT_TO_PKT_SCALOR = 10e6 / 64e3
 
 '''
     Definition for Packet
@@ -18,7 +17,6 @@ class Packet(object):
     def __init__(self, source, destination, timestamp,packetsize):
         self.source = source
         self.destination = destination
-        #self.flow = flow
         self.timestamp = timestamp
         self.packetsize = packetsize
         
@@ -36,18 +34,22 @@ class RouterPacket(Packet):#???routerpacket does not contain flow info.generate 
     def __init__(self, source, timestamp, packetsize, routerTable, acknowledgement):
         super(RouterPacket, self).__init__(source = source, destination = 0,
                                            timestamp = timestamp, packetsize = packetsize)
-        '''
-            [Zilong]
-            There isn't a Flow associated with RouterPacket
-        '''
         self.routerTable = routerTable
         self.acknowledgement = acknowledgement
+
+
+
 
 
 class Element(object):
     def __init__(self, engine, name=None):
         self.engine = engine
         self.name = name
+
+
+
+
+
 
 class Host(Element):
     def __init__(self, engine, name, address):    
@@ -60,7 +62,7 @@ class Host(Element):
         self.flows.append(flow)
         
     def send(self, packet):
-        print "[{}] {} start to send packet".format(self.engine.curTime, self.name)
+        print "[{}] {} start to send packet".format(self.engine.getCurrentTime(), self.name)
         self.link.send(packet,self)
         
     def receive(self, packet):
@@ -79,19 +81,9 @@ class Host(Element):
     
     def react_to_packet_receipt(self, event):
         if isinstance(event.packet, RouterPacket):
-            '''
-                [Zilong]
-                Slight change here.
-                Original: print "{} receive packet {}".format(self.name, event.packet.acknowledgement)
-            '''
             print "[{}] receive RouterPacket [{}]".format(self.name, event.packet.acknowledgement)
 
         if isinstance(event.packet, DataPacket):
-            '''
-                [Zilong]
-                Slight change here.
-                Original: print "{} receive packet {}, {}".format(self.name, event.packet.acknowledgement, event.packet.pck_id)
-            '''
             if event.packet.acknowledgement == False:
                 print "[{}] receive DataPacket [{}]".format(self.name, event.packet.pck_id)
             else:
@@ -99,7 +91,11 @@ class Host(Element):
                                                                                event.packet.pck_id - 1)
                 
         self.receive(event.packet)
-                    
+
+
+
+
+                  
 class Link(Element):
     def __init__(self, engine, name, node1, node2, delay, rate, buffer_size):
         super(Link,self).__init__(engine, name)
@@ -107,24 +103,14 @@ class Link(Element):
         self.node2 = node2
         self.delay = delay
         self.rate = rate
-        '''
-            [Zilong]
-            Use two buffers to enable double-directional transmission
-        '''
         self.buffer1 = Buffer(self.engine, buffer_size, self)
         self.buffer2 = Buffer(self.engine, buffer_size, self)
         self.busy = False
-        #self.engine.recorder.record_link_rate(self, engine.getCurrentTime(), 0)
         self.attachToNode(node1)
         self.attachToNode(node2)
-        
     
     def attachToNode(self,node):
         if isinstance(node, Host):
-            '''
-                [Zilong]
-                Host can only corresponding to one Link at the same time
-            '''
             if node.link != None:
                 print "ERROR: Host should not have link now"
                 return            
@@ -150,7 +136,6 @@ class Link(Element):
             return
         
         self.busy = True
-        #self.engine.recorder.record_link_rate(self, self.engine.getCurrentTime(), self.rate)
         self.engine.recorder.record_link_rate(self, self.engine.getCurrentTime(), self.rate)
         popper = None
         receiver = None
@@ -163,37 +148,35 @@ class Link(Element):
         
         packet = popper.pop()
         costTime = self.delay + packet.packetsize / self.rate
-        event1 = Event.CreateEventPacketReceipt(self.engine.curTime+costTime, receiver, packet)
+        event1 = Event.CreateEventPacketReceipt(self.engine.getCurrentTime() + costTime, receiver, packet)
         self.engine.push_event(event1)
         
         '''
-            [Zilong]
-            Just to update the link status after one packet is sent
-            Set busy to False after it
+            Reset Link.busy to enable the next transmission
         '''
-        event2 = Event(self.engine.curTime+costTime, self, EVENT_LINK_AVAILABLE)
+        event2 = Event(self.engine.getCurrentTime() + costTime, self, EVENT_LINK_AVAILABLE)
         self.engine.push_event(event2)
         
-        
-            
     def react_to_link_available(self, event):
-#         print "{} link available".format(self.name)
+        print "{} link available".format(self.name)
         self.busy = False
         self.engine.recorder.record_link_rate(self, self.engine.getCurrentTime(), 0)
         self.decide()
-        
+
+
+
+
+
 class Buffer(Element):
     def __init__(self, engine, buffer_size, link):
-        super(Buffer,self).__init__(engine)
+        super(Buffer, self).__init__(engine)
         self.buffer = collections.deque()
         self.bytes = 0
         self.buffer_size = buffer_size
         self.link = link
         self.loss = 0
-        
     
     def push(self, packet):
-        
         if self.bytes + packet.packetsize <= self.buffer_size:
             print "use buffer"
             self.buffer.append(packet)
@@ -203,8 +186,7 @@ class Buffer(Element):
             self.engine.recorder.record_buffer_occupancy(self.link, self.engine.getCurrentTime(), self.bytes)
         else:
             '''
-                [Zilong]
-                Handle packet lost here
+                Handle Packet Lost
             '''
             self.loss += 1
            
@@ -216,13 +198,14 @@ class Buffer(Element):
         if self.bytes == 0 :
             print "Buffer underflow"
         else:
-            
             packet = self.buffer.popleft()
             self.bytes -= packet.packetsize
             return packet
-            
-            
-    
+
+
+
+
+   
 class Router(Element):
     def __init__(self, engine, name, address, updateTime=ROUTER_PACKET_GENERATION_INTERVAL):
         super(Router,self).__init__(engine, name)
@@ -353,80 +336,28 @@ class Router(Element):
 class Flow(Element):
     def __init__(self, engine, name, source, destination, amount, tcp):
         super(Flow, self).__init__(engine, name)
-        '''
-            [Zilong]
-            It seems that Flow can only be one-directional here.
-            So, for each packet transmitted from Host A to Host B,
-            there would be two flows?
-            But actually, we only use one.
-        '''
         self.source = source
         self.destination = destination
         self.amount = amount
-        self.tcp = tcp
-        self.tcp.setFlow(self)
-        '''
-            [Zilong]
-            Change packetCounter to be domain variable
-            Original:
-                self.packetCounter = 0
-        '''
-        self.received_packets = list()
-        self.packet_to_receive = 0
         
         '''
             [Mengchen] add self.outOfOrderPackets and self.lastOrderedPacketID
         '''
         self.outOfOrderPackets = []
         self.lastOrderedPacketID = 0
-        
+                
         source.addFlow(self)
         destination.addFlow(self)
-        
-    '''
-        [Zilong]
-        A slight change to make packetCounter a domain variable
-        Original:
-            def generatePacket(self):
-                if self.packetCounter >= self.amount:
-                    print "ERROR: Trying to send more packets than amount"
-                    
-                packet = DataPacket(self.source,self.destination,self, self.engine.getCurrentTime(), PACKET_SIZE, 
-                                    False, self.packetCounter)
-                self.packetCounter += 1
-                return packet
-    '''
+        self.tcp = tcp
+        self.tcp.setFlow(self)
+
     def generatePacket(self, pck_id):
-#         if packetCounter >= self.amount:
-#             print "ERROR: Trying to send more packets than amount"
-            
         packet = DataPacket(self.source, self.destination, self, self.engine.getCurrentTime(), PACKET_SIZE, 
-                            False, pck_id)
-#         print 'packetCounter: {},'.format(packetCounter)
-        
+                            False, pck_id)        
         return packet
 
         
     def generateAckPacket(self, packet):
-        '''
-            [Zilong]
-            Add received_packet here, which should be in TCP.
-            Just for test now
-        
-        cur_id = packet.pck_id
-        
-        if cur_id == self.packet_to_receive:
-            self.packet_to_receive += 1
-            for id in self.received_packets:
-                if id == self.packet_to_receive:
-                    self.packet_to_receive += 1
-#                     self.received_packets.remove(id)
-        elif cur_id > self.packet_to_receive:
-            self.received_packets.append(cur_id)
-        else:
-            pass
-        '''
-        
         '''
             [Mengchen] modify the code to ensure the pck_id  is the pck that the receiver expected for the next pck
         '''
@@ -444,18 +375,11 @@ class Flow(Element):
             else:
                 #this pck is after the expected pck
                 heapq.heappush(self.outOfOrderPackets, packet.pck_id)
-                    
-                
-  
-        
+
         ack_packet = DataPacket(packet.destination, packet.source, self, self.engine.getCurrentTime(), ACK_PACKET_SIZE, 
                                 True, self.lastOrderedPacketID + 1)
         ack_packet.setOriginalPacketTimestamp(packet.timestamp)
-        '''
-            [Zilong]
-            So, for each packet with pck_id
-            The ACK packet of it will have pck_id = packet.pck_id + 1?
-        '''
+
         return ack_packet
         
     def sourceSend(self,packet):
@@ -467,18 +391,12 @@ class Flow(Element):
     def sourceReceive(self,packet):
         if packet.acknowledgement == True:
             self.tcp.react_to_ack(packet)
-        '''
-            [Zilong]
-            Because Flow is one-directional, so we need to handle ACK here
-        '''
     
     def destinationReceive(self,packet):      
         ack_packet = self.generateAckPacket(packet)
         self.destinationSend(ack_packet)
         self.engine.recorder.record_flow_rate(self, self.engine.getCurrentTime(), PACKET_SIZE * BIT_TO_PKT_SCALOR)
         packet_delay = self.engine.getCurrentTime() - packet.timestamp
-        print '------------'
-        print packet_delay
        
         self.engine.recorder.record_packet_delay(self, self.engine.getCurrentTime(), packet_delay)
             
@@ -486,7 +404,9 @@ class Flow(Element):
         self.tcp.react_to_time_out(event)
     
     def react_to_flow_start(self, event):
-
-        #print "--[{}]--".format(self.engine.curTime)
         self.tcp.react_to_flow_start(event)
-
+        
+        
+        
+        
+        

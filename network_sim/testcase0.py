@@ -1,8 +1,10 @@
 from events import * 
 from element import  *
 from engine import *
+
 import matplotlib.pyplot as plt
 import tcp_fast
+import tcp_tahoe
 
 def main():
     
@@ -28,7 +30,7 @@ def main():
     host1 = Host(engine, 'H1', '192.168.0.1')   
     host2 = Host(engine, 'H2', '192.168.0.2')
     
-    flow1 = Flow(engine, 'F1', host1, host2, 20 * 1024 * 1024 / PACKET_SIZE, tcp_fast.TcpFast())
+    flow1 = Flow(engine, 'F1', host1, host2, 20 * 1024 * 1024 / PACKET_SIZE, tcp_tahoe.TcpTahoe())
 
     link0 = Link(engine, 'L1', host1, host2, 0.01, 10 * 1024 * 1024, 64 * 1024)
 
@@ -36,12 +38,27 @@ def main():
     
     engine.run()
             
-        
     '''
         Data Visualization
     '''
     plot_n = 1;
     
+    for i in range(1, 2):
+        cur_variable = 'cate_window_size'
+        cur_name = 'F' + str(i)
+        cur_string = cur_variable + '_' + cur_name
+        engine.recorder.draw(engine.recorder.category[cur_variable][cur_name], plot_n,
+                             cur_string, cur_string, 'Time / s', 'Window Size / pkts')
+        plot_n = plot_n + 1 
+
+    for i in range(1, 2):
+        cur_variable = 'cate_pkts_received'
+        cur_name = 'F' + str(i)
+        cur_string = cur_variable + '_' + cur_name
+        engine.recorder.draw(engine.recorder.category[cur_variable][cur_name], plot_n,
+                             cur_string, cur_string, 'Time / s', 'Packets Received / pkts')
+        plot_n = plot_n + 1 
+                
     for i in range(1, 2):
         cur_variable = 'cate_flow_rate'
         cur_name = 'F' + str(i)

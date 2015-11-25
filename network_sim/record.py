@@ -1,13 +1,5 @@
-CATE_LINK_RATE = "cate_link_rate"
-CATE_PACKET_LOSS = "cate_packet_loss"
-CATE_BUFFER_OCCUPANCY = "cate_buffer_occupancy"
-CATE_FLOW_RATE = "cate_flow_rate"
-CATE_WINDOW_SIZE = "cate_window_size"
-CATE_PACKET_DELAY = "cate_packet_delay"
-CATE_ALL = [CATE_LINK_RATE, CATE_PACKET_LOSS, CATE_BUFFER_OCCUPANCY, CATE_FLOW_RATE, CATE_WINDOW_SIZE, CATE_PACKET_DELAY]
-
-import matplotlib.pyplot as plt
 from constants import *
+import matplotlib.pyplot as plt
 
 class Record(object):
     def __init__(self):
@@ -54,14 +46,17 @@ class Record(object):
         self.record(CATE_PACKET_DELAY, element, time, packetdelay)
       
     def record_packet_loss(self, element, time, packetloss): 
-        #print "____________record loss",element.name
         self.record(CATE_PACKET_LOSS, element, time, packetloss)
+        
     def record_buffer_occupancy(self, element, time,bufferoccupancy): 
-        self.record(CATE_BUFFER_OCCUPANCY, element, time, bufferoccupancy)   
-       
-    #def record_window_size(self, element, time, windowsize): 
-     #   self.record(CATE_LINK_RATE, element, time, windowsize)
-    
+        self.record(CATE_BUFFER_OCCUPANCY, element, time, bufferoccupancy)
+           
+    def record_window_size(self, element, time, window_size): 
+        self.record(CATE_WINDOW_SIZE, element, time, window_size) 
+
+    def record_pkts_received(self, element, time, pkts_received): 
+        self.record(CATE_PKTS_RECEIVED, element, time, pkts_received) 
+
     def draw(self, content, plot_n, title, file_name, xlabel, ylabel):
 
         x,y = zip(*content)
@@ -87,20 +82,5 @@ class Record(object):
         plt.xlabel(xlabel)
         plt.ylabel(ylabel)
         plt.ylim(ymin, ymax)
-        file_name = DIR_IMG + file_name
-        plt.savefig(file_name)
-    '''
-        Plot specifying xfactor and yfactor
-        e.g. transform from bytes to pkts
-    '''
-    def draw_factor(self, content, plot_n, title, file_name, xlabel, ylabel, xfactor, yfactor):
-
-        x,y = zip(*content)
-        
-        plt.figure(plot_n)
-        plt.plot(x / xfactor, y / yfactor)
-        plt.title(title)
-        plt.xlabel(xlabel)
-        plt.ylabel(ylabel)
         file_name = DIR_IMG + file_name
         plt.savefig(file_name)
