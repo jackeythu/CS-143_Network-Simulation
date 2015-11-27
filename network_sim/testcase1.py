@@ -1,6 +1,7 @@
 from events import * 
 from element import  *
 from engine import SimEngine
+from parse import *
 
 import matplotlib.pyplot as plt
 import tcp_fast
@@ -26,36 +27,9 @@ def main():
         '''
         
         engine = SimEngine(30)
-        
-        host1 = Host(engine, 'H1', '192.168.0.1')   
-        host2 = Host(engine, 'H2', '192.168.0.2')
-        
-        flow1 = Flow(engine, 'F1', host1, host2, 20 * 1024 * 1024 / PACKET_SIZE, tcp_tahoe.TcpTahoe())
-        
-        router1 = Router(engine, 'R1', '192.168.1.1')
-        router2 = Router(engine, 'R2', '192.168.1.2')
-        router3 = Router(engine, 'R3', '192.168.1.3')
-        router4 = Router(engine, 'R4', '192.168.1.4')
-
-        link0 = Link(engine, 'L0', host1, router1, 0.01, 12.5 * 1024 * 1024, 64 * 1024)
-        link1 = Link(engine, 'L1', router1, router2, 0.01, 10 * 1024 * 1024, 64 * 1024)
-        link2 = Link(engine, 'L2', router1, router3, 0.01, 10 * 1024 * 1024, 64 * 1024)
-        link3 = Link(engine, 'L3', router2, router4, 0.01, 10 * 1024 * 1024, 64 * 1024)
-        link4 = Link(engine, 'L4', router3, router4, 0.01, 10 * 1024 * 1024, 64 * 1024)
-        link5 = Link(engine, 'L5', host2, router4, 0.01, 12.5 * 1024 * 1024, 64 * 1024)
-                
-        engine.push_event(Event(0.5, flow1, EVENT_FLOW_START))
-                
-        event1 = Event(0, router1, EVENT_ROUTINGTABLE_UPDATE)
-        event2 = Event(0, router2, EVENT_ROUTINGTABLE_UPDATE)
-        event3 = Event(0, router3, EVENT_ROUTINGTABLE_UPDATE)
-        event4 = Event(0, router4, EVENT_ROUTINGTABLE_UPDATE)
-        engine.push_event(event1) 
-        engine.push_event(event2) 
-        engine.push_event(event3) 
-        engine.push_event(event4) 
+        file_name = 'testcase1.txt'
+        parse(engine, file_name)
         print engine.queue
-        
         engine.run()
         
         
