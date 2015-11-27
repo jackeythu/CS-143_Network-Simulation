@@ -337,11 +337,12 @@ class Router(Element):
         
 
 class Flow(Element):
-    def __init__(self, engine, name, source, destination, amount, tcp):
+    def __init__(self, engine, name, source, destination, amount, start_time, tcp):
         super(Flow, self).__init__(engine, name)
         self.source = source
         self.destination = destination
         self.amount = amount
+        self.start_time = start_time
         
         '''
             [Mengchen] add self.outOfOrderPackets and self.lastOrderedPacketID
