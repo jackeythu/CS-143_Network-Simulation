@@ -1,6 +1,7 @@
 from events import * 
 from element import  *
 from engine import *
+from parse import *
 
 import matplotlib.pyplot as plt
 import tcp_fast
