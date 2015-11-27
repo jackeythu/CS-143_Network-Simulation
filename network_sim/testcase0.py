@@ -26,16 +26,8 @@ def main():
     '''
     
     engine = SimEngine(60)
-
-    host1 = Host(engine, 'H1', '192.168.0.1')   
-    host2 = Host(engine, 'H2', '192.168.0.2')
-    
-    flow1 = Flow(engine, 'F1', host1, host2, 10000 * 1024 / PACKET_SIZE, tcp_fast.TcpFast())
-
-    link0 = Link(engine, 'L1', host1, host2, 0.01, 10 * 1024 * 1024/8, 64 * 1024)
-
-    engine.push_event(Event(0.5, flow1, EVENT_FLOW_START))
-    
+    file_name = 'testcase0.txt'
+    parse(engine, file_name)
     engine.run()
             
     '''
