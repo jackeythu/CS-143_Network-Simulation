@@ -33,7 +33,7 @@ class Event:
         return event 
     
     @staticmethod
-    def CreateEventPacketTimeOut(time, reactor, pck_id):
+    def CreateEventPacketTimeOut(time, reactor, pck_id=None):
         event = Event(time, reactor, EVENT_PACKET_TIMEOUT)
         event.pck_id = pck_id
         return event

@@ -101,10 +101,10 @@ class Link(Element):
         super(Link,self).__init__(engine, name)
         self.node1 = node1
         self.node2 = node2
-        self.delay = delay
+        self.propogationDelay = delay
         self.rate = rate
-        self.buffer1 = Buffer(self.engine, buffer_size, self)
-        self.buffer2 = Buffer(self.engine, buffer_size, self)
+        self.buffer1 = Buffer(self.engine, self.name+'a', buffer_size, self)
+        self.buffer2 = Buffer(self.engine, self.name+'b', buffer_size, self)
         self.busy = False
         self.attachToNode(node1)
         self.attachToNode(node2)
@@ -136,7 +136,8 @@ class Link(Element):
             return
         
         self.busy = True
-        self.engine.recorder.record_link_rate(self, self.engine.getCurrentTime(), self.rate)
+        
+        self.engine.recorder.record_link_rate(self, self.engine.getCurrentTime(), self.rate*8/1024/1024)
         popper = None
         receiver = None
         if lg1>lg2:
@@ -147,14 +148,15 @@ class Link(Element):
             receiver = self.node1
         
         packet = popper.pop()
-        costTime = self.delay + packet.packetsize / self.rate
-        event1 = Event.CreateEventPacketReceipt(self.engine.getCurrentTime() + costTime, receiver, packet)
+        transmissionDeley = 1.0*packet.packetsize / self.rate
+        delay = self.propogationDelay + transmissionDeley
+        event1 = Event.CreateEventPacketReceipt(self.engine.getCurrentTime() + delay, receiver, packet)
         self.engine.push_event(event1)
         
         '''
             Reset Link.busy to enable the next transmission
         '''
-        event2 = Event(self.engine.getCurrentTime() + costTime, self, EVENT_LINK_AVAILABLE)
+        event2 = Event(self.engine.getCurrentTime() + transmissionDeley, self, EVENT_LINK_AVAILABLE)
         self.engine.push_event(event2)
         
     def react_to_link_available(self, event):
@@ -168,30 +170,30 @@ class Link(Element):
 
 
 class Buffer(Element):
-    def __init__(self, engine, buffer_size, link):
-        super(Buffer, self).__init__(engine)
+    def __init__(self, engine, name, buffer_size, link):
+        super(Buffer, self).__init__(engine, name)
         self.buffer = collections.deque()
         self.bytes = 0
         self.buffer_size = buffer_size
         self.link = link
-        self.loss = 0
+        
     
     def push(self, packet):
         if self.bytes + packet.packetsize <= self.buffer_size:
             print "use buffer"
             self.buffer.append(packet)
             self.bytes += packet.packetsize
-            self.loss = 0
-            self.engine.recorder.record_packet_loss(self.link, self.engine.getCurrentTime(), self.loss)
-            self.engine.recorder.record_buffer_occupancy(self.link, self.engine.getCurrentTime(), self.bytes)
+            
+            self.engine.recorder.record_packet_loss(self, self.engine.getCurrentTime(), 0)
+            self.engine.recorder.record_buffer_occupancy(self, self.engine.getCurrentTime(), self.bytes/PACKET_SIZE)
         else:
             '''
                 Handle Packet Lost
             '''
-            self.loss += 1
+            
            
-            self.engine.recorder.record_packet_loss(self.link, self.engine.getCurrentTime(), self.loss)
-            self.engine.recorder.record_buffer_occupancy(self.link, self.engine.getCurrentTime(), self.bytes)
+            self.engine.recorder.record_packet_loss(self, self.engine.getCurrentTime(), 1)
+            self.engine.recorder.record_buffer_occupancy(self, self.engine.getCurrentTime(), self.bytes/PACKET_SIZE)
             print 'Packet Lost: [{}],'.format(packet.pck_id)
          
     def pop(self):
@@ -200,6 +202,7 @@ class Buffer(Element):
         else:
             packet = self.buffer.popleft()
             self.bytes -= packet.packetsize
+            self.engine.recorder.record_buffer_occupancy(self, self.engine.getCurrentTime(), self.bytes/PACKET_SIZE)
             return packet
 
 

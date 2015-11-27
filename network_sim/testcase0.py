@@ -25,14 +25,14 @@ def main():
         ROUTER_PACKET_GENERATION_INTERVAL: 1.0 s
     '''
     
-    engine = SimEngine(20)
+    engine = SimEngine(60)
 
     host1 = Host(engine, 'H1', '192.168.0.1')   
     host2 = Host(engine, 'H2', '192.168.0.2')
     
-    flow1 = Flow(engine, 'F1', host1, host2, 20 * 1024 * 1024 / PACKET_SIZE, tcp_tahoe.TcpTahoe())
+    flow1 = Flow(engine, 'F1', host1, host2, 10000 * 1024 / PACKET_SIZE, tcp_fast.TcpFast())
 
-    link0 = Link(engine, 'L1', host1, host2, 0.01, 10 * 1024 * 1024, 64 * 1024)
+    link0 = Link(engine, 'L1', host1, host2, 0.01, 10 * 1024 * 1024/8, 64 * 1024)
 
     engine.push_event(Event(0.5, flow1, EVENT_FLOW_START))
     
@@ -41,68 +41,11 @@ def main():
     '''
         Data Visualization
     '''
-    plot_n = 1;
+    engine.recorder.plot()
     
-    for i in range(1, 2):
-        cur_variable = 'cate_window_size'
-        cur_name = 'F' + str(i)
-        cur_string = cur_variable + '_' + cur_name
-        engine.recorder.draw(engine.recorder.category[cur_variable][cur_name], plot_n,
-                             cur_string, cur_string, 'Time / s', 'Window Size / pkts')
-        plot_n = plot_n + 1 
-
-    for i in range(1, 2):
-        cur_variable = 'cate_pkts_received'
-        cur_name = 'F' + str(i)
-        cur_string = cur_variable + '_' + cur_name
-        engine.recorder.draw(engine.recorder.category[cur_variable][cur_name], plot_n,
-                             cur_string, cur_string, 'Time / s', 'Packets Received / pkts')
-        plot_n = plot_n + 1 
-                
-    for i in range(1, 2):
-        cur_variable = 'cate_flow_rate'
-        cur_name = 'F' + str(i)
-        cur_string = cur_variable + '_' + cur_name
-        engine.recorder.draw(engine.recorder.category[cur_variable][cur_name], plot_n,
-                             cur_string, cur_string, 'Time / s', 'Flow Rate / bps')
-        plot_n = plot_n + 1 
-          
-    for i in range(1, 2):
-        cur_variable = 'cate_packet_delay'
-        cur_name = 'F' + str(i)
-        cur_string = cur_variable + '_' + cur_name
-        engine.recorder.draw(engine.recorder.category[cur_variable][cur_name], plot_n,
-                             cur_string, cur_string, 'Time / s', 'Packet Delay / s')
-        plot_n = plot_n + 1  
-                    
-    for i in range(1, 2):
-        cur_variable = 'cate_link_rate'
-        cur_name = 'L' + str(i)
-        cur_string = cur_variable + '_' + cur_name
-        engine.recorder.draw(engine.recorder.category[cur_variable][cur_name], plot_n,
-                             cur_string, cur_string, 'Time / s', 'Link Rate / bps')
-        plot_n = plot_n + 1
         
-    for i in range(1, 2):
-        cur_variable = 'cate_buffer_occupancy'
-        cur_name = 'L' + str(i)
-        cur_string = cur_variable + '_' + cur_name
-        engine.recorder.draw(engine.recorder.category[cur_variable][cur_name], plot_n,
-                             cur_string, cur_string, 'Time / s', 'Buffer Occupancy / bytes')
-        plot_n = plot_n + 1
     
-    for i in range(1, 2):
-        cur_variable = 'cate_packet_loss'
-        cur_name = 'L' + str(i)
-        cur_string = cur_variable + '_' + cur_name
-        engine.recorder.draw(engine.recorder.category[cur_variable][cur_name], plot_n,
-                             cur_string, cur_string, 'Time / s', 'Packet Loss / pkts')
-        plot_n = plot_n + 1
     
-    print '\n'
-    print 'Imgs Plot: Finished!'
-    
-#     plt.show()
 
 if __name__ == '__main__':
     main()

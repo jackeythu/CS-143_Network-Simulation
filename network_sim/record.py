@@ -1,11 +1,23 @@
 from constants import *
 import matplotlib.pyplot as plt
+import __main__
 
 class Record(object):
     def __init__(self):
         self.category = {}
+        self.unit_string = {
+            CATE_LINK_RATE: ('Time / s', 'Link Rate / Mbps'),
+            CATE_PACKET_LOSS: ('Time / s', 'Packet Loss / pkts'), 
+            CATE_BUFFER_OCCUPANCY: ('Time / s', 'Buffer Occupancy / PCK_SIZE'), 
+            CATE_FLOW_RATE: ('Time / s', 'Flow Rate / bps'), 
+            CATE_WINDOW_SIZE: ('Time / s', 'Window Size / pkts'), 
+            CATE_PACKET_DELAY: ('Time / s', 'Packet Delay / s'), 
+            CATE_PKTS_RECEIVED: ('Time / s', 'Packets Received / pkts')
+            
+        }
         for cate in CATE_ALL:
             self.category[cate] = {}
+
     
     def record(self, cate, element, time, value):
         """
@@ -18,7 +30,7 @@ class Record(object):
         content = self.category[cate][element.name]
         if content[-1][0] != time:
             if content[-1][1] == value:
-                content.append((time,value))
+                pass
             else:
                 content.append((time,content[-1][1]))
                 content.append((time,value))
@@ -84,3 +96,58 @@ class Record(object):
         plt.ylim(ymin, ymax)
         file_name = DIR_IMG + file_name
         plt.savefig(file_name)
+        
+    def smooth(self, interval, inventory):
+        i = 1
+        start = inventory[0][0]
+        sumup = 0; avg = 0
+        outputList = []
+        while start + interval< inventory[-1][0]:
+            sumup = 0
+            while inventory[i][0]< start + interval:
+                
+                if inventory[i-1][0] < start:
+                    sumup -= (start-inventory[i-1][0]) * inventory[i-1][1]
+                sumup += (inventory[i][0] - inventory[i-1][0])* inventory[i-1][1]
+                i += 1
+            sumup += (start + interval - max(inventory[i-1][0], start))*inventory[i-1][1]
+            
+            avg = sumup/interval
+            outputList.append((start+interval/2, avg))
+            
+            start += interval
+        return outputList
+    
+    def plot(self):
+        n = 0
+        for cate in self.category:        
+            cur_cate = cate
+            x_unit, y_unit = self.unit_string[cate]
+            for element in self.category[cur_cate]:                
+                cur_string = cur_cate + '_' + element     
+    #         print engine.recorder.category[cur_variable]
+                smooth = self.smooth(0.2, self.category[cur_cate][element])
+#                 smooth = self.category[cur_cate][element]
+                if smooth:
+                    self.draw(smooth, n, cur_string, cur_string, x_unit, y_unit)
+                    n += 1
+                else:
+                    print 'empty smooth ' + cur_string
+   
+        print 'Imgs Plot: Finished!'
+        
+        
+        plt.show()
+            
+
+            
+ 
+def main():
+    a = Record()
+    a.calAvg()
+         
+if __name__ == '__main__':
+     
+    main()
+    
+        
