@@ -3,7 +3,7 @@ import events
 
 class TcpFast():
     def __init__(self):
-        self.alpha = 8
+        self.alpha = 16
         self.gamma = 0.125
         self.windowSize = 4
         self.baseRTT = float('inf')
@@ -11,7 +11,7 @@ class TcpFast():
         self.onTheFly = collections.deque()
         self.acknowledgedPacketID = -1
         self.validTimeOutEvent = None
-        self.threshold = 128
+        self.threshold = 16
         self.stateMachine = StateMachine(self)
         
     def setFlow(self, flow):
@@ -33,9 +33,9 @@ class TcpFast():
                 self.onTheFly.append(self.onTheFly[-1]+1)
             
     def sendPacket(self, pck_id):
-        print "~~~~~~~~~~~~x",self.flow.amount
+#         print "~~~~~~~~~~~~x",self.flow.amount
         if pck_id < self.flow.amount:
-            print "send packet", pck_id
+#             print "send packet", pck_id
             packet = self.flow.generatePacket(pck_id)
             self.flow.sourceSend(packet)
             self.setTimeOutEvent(max(1, self.avgRTT))
@@ -61,10 +61,14 @@ class TcpFast():
             
 
     def react_to_ack(self, packet):
+#         print self.engine.getCurrentTime(), packet.originalPacketTimestamp, self.engine.getCurrentTime() - packet.originalPacketTimestamp
+        with open('RTT.txt', 'a') as myFile:        
+            myFile.write('{} {} {}\n'.format(self.engine.getCurrentTime(), packet.originalPacketTimestamp, self.engine.getCurrentTime() - packet.originalPacketTimestamp))
+            
         RTT = self.engine.getCurrentTime() - packet.originalPacketTimestamp
         self.baseRTT = min(self.baseRTT,RTT)
         self.avgRTT = (1-self.gamma) * self.avgRTT + self.gamma * RTT
-        print "!!!!!!!!!!!",self.baseRTT, RTT
+#         print "!!!!!!!!!!!",self.baseRTT, RTT
 #         windowSize = min(2*self.windowSize, (1-self.gamma)*self.windowSize + 
 #                               self.gamma*(self.baseRTT/RTT*self.windowSize + self.alpha))
 #         self.setWindowSize(windowSize)
@@ -86,7 +90,8 @@ class StateMachine(object):
 
         
     def ACK(self, ackPacket, RTT):
-        print "ACK!!!!!!!!", ackPacket.pck_id
+#         print "ACK!!!!!!!!", ackPacket.pck_id
+        print self.state, self.algorithm.baseRTT, RTT
         if self.lastAckID == ackPacket.pck_id:
             self.dupTime += 1
         else:
@@ -149,7 +154,7 @@ class StateMachine(object):
             
             
     def timeout(self):
-        print "timeout!!!!!!!!"
+        print "!!!!!!!!!!!timeout!!!!!!!!", self.algorithm.engine.getCurrentTime()
         self.algorithm.threshold = self.algorithm.windowSize/2
         self.algorithm.setWindowSize(1)
         self.state = StateMachine.SLOW_START

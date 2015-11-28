@@ -25,32 +25,32 @@ Router
 Link
 	ID 		L0
 	rate		12.5
-    	delay		10
+    delay		10
 	buffer	 	64
 	connection	H1 R1
 	ID 		L1
 	rate		10
-    	delay		10
+    delay		10
 	buffer	 	64
 	connection	R1 R2
 	ID 		L2
 	rate		10
-    	delay		10
+    delay		10
 	buffer	 	64
 	connection	R1 R3
 	ID 		L3
 	rate		10
-     	delay		10
+    delay		10
 	buffer	 	64
 	connection	R2 R4
 	ID 		L4
 	rate		10
-     	delay		10
+    delay		10
 	buffer	 	64
 	connection	R3 R4
 	ID 		L5
 	rate		12.5
-     	delay		10
+    delay		10
 	buffer	 	64
 	connection	R4 H2
 

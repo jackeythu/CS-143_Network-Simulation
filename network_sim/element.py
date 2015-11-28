@@ -6,7 +6,7 @@ import collections
 import copy
 import heapq
 
-BIT_TO_PKT_SCALOR = 10 * 1024 * 1024 / PACKET_SIZE
+BIT_TO_PKT_SCALOR = 10.0 * 1024 * 1024 / PACKET_SIZE
 
 '''
     Definition for Packet
@@ -27,15 +27,22 @@ class DataPacket(Packet):
         self.acknowledgement = acknowledgement 
         self.flow = flow
         self.pck_id = pck_id
+        
     def setOriginalPacketTimestamp(self, timestamp):
         self.originalPacketTimestamp = timestamp
-                
+        
+#     def setPreHop(self,preHop,preTime):
+#         self.preHop = preHop
+#         self.preTime = preTime
+#                 
 class RouterPacket(Packet):#???routerpacket does not contain flow info.generate in Router and use link to transmit
-    def __init__(self, source, timestamp, packetsize, routerTable, acknowledgement):
+    # type: 1. 'request' 2. 'ack_request' 3. 'update'
+    def __init__(self, source, timestamp, packetsize, routerTable, type=None):
         super(RouterPacket, self).__init__(source = source, destination = 0,
                                            timestamp = timestamp, packetsize = packetsize)
         self.routerTable = routerTable
-        self.acknowledgement = acknowledgement
+#         self.acknowledgement = acknowledgement
+        self.type = type
 
 
 
@@ -62,8 +69,9 @@ class Host(Element):
         self.flows.append(flow)
         
     def send(self, packet):
-        print "[{}] {} start to send packet".format(self.engine.getCurrentTime(), self.name)
+        #print "[{}] {} start to send packet".format(self.engine.getCurrentTime(), self.name)
         self.link.send(packet,self)
+#         self.packet.setPreHop(self, self.engine.getCurrentTime())
         
     def receive(self, packet):
         if isinstance(packet, DataPacket):
@@ -74,22 +82,22 @@ class Host(Element):
                     if self == flow.destination:
                         flow.destinationReceive(packet)
         if isinstance(packet, RouterPacket):
-            rt = {}
-            rt[self.address] = (0, self.address) 
-            ackRouterPacket = RouterPacket(self, packet.timestamp, PACKET_SIZE, rt, True)
-            self.send(ackRouterPacket)
+            if packet.type == 'request':
+                comeCost = self.engine.getCurrentTime() - packet.timestamp
+                ackRouterPacket = RouterPacket(self, packet.timestamp, PACKET_SIZE, comeCost, 'ack_request')
+                self.send(ackRouterPacket)
     
     def react_to_packet_receipt(self, event):
-        if isinstance(event.packet, RouterPacket):
-            print "[{}] receive RouterPacket [{}]".format(self.name, event.packet.acknowledgement)
-
-        if isinstance(event.packet, DataPacket):
-            if event.packet.acknowledgement == False:
-                print "[{}] receive DataPacket [{}]".format(self.name, event.packet.pck_id)
-            else:
-                print "[{}] receive AckPacket [{}] (for DataPack [{}])".format(self.name, event.packet.pck_id, 
-                                                                               event.packet.pck_id - 1)
-                
+#         if isinstance(event.packet, RouterPacket):
+# #             print "[{}] receive RouterPacket [{}]".format(self.name, event.packet.acknowledgement)
+# 
+#         if isinstance(event.packet, DataPacket):
+#             if event.packet.acknowledgement == False:
+# #                 print "[{}] receive DataPacket [{}]".format(self.name, event.packet.pck_id)
+#             else:
+#                 print "[{}] receive AckPacket [{}] (for DataPack [{}])".format(self.name, event.packet.pck_id, 
+#                                                                                event.packet.pck_id - 1)
+#                 
         self.receive(event.packet)
 
 
@@ -112,7 +120,7 @@ class Link(Element):
     def attachToNode(self,node):
         if isinstance(node, Host):
             if node.link != None:
-                print "ERROR: Host should not have link now"
+#                 print "ERROR: Host should not have link now"
                 return            
             node.link = self
         if isinstance(node, Router):
@@ -133,6 +141,7 @@ class Link(Element):
     def decide(self):
         lg1 = self.buffer1.bytes; lg2 = self.buffer2.bytes
         if lg1 == 0 and lg2 == 0:
+            print self.engine.getCurrentTime(),"buffer1 and buffer2 is empty"
             return
         
         self.busy = True
@@ -140,12 +149,21 @@ class Link(Element):
         self.engine.recorder.record_link_rate(self, self.engine.getCurrentTime(), self.rate*8/1024/1024)
         popper = None
         receiver = None
-        if lg1>lg2:
+        
+        if lg1 == 0:
+            popper = self.buffer2
+            receiver = self.node1
+        elif lg2 == 0:
             popper = self.buffer1
             receiver = self.node2
         else:
-            popper = self.buffer2
-            receiver = self.node1
+            if self.buffer1.buffer[0][0] < self.buffer2.buffer[0][0]:
+                popper = self.buffer1
+                receiver = self.node2
+            else:
+                popper = self.buffer2
+                receiver = self.node1
+     
         
         packet = popper.pop()
         transmissionDeley = 1.0*packet.packetsize / self.rate
@@ -160,7 +178,7 @@ class Link(Element):
         self.engine.push_event(event2)
         
     def react_to_link_available(self, event):
-        print "{} link available".format(self.name)
+#         print "{} link available".format(self.name)
         self.busy = False
         self.engine.recorder.record_link_rate(self, self.engine.getCurrentTime(), 0)
         self.decide()
@@ -176,33 +194,36 @@ class Buffer(Element):
         self.bytes = 0
         self.buffer_size = buffer_size
         self.link = link
+    
+    
         
     
     def push(self, packet):
         if self.bytes + packet.packetsize <= self.buffer_size:
-            print "use buffer"
-            self.buffer.append(packet)
+#             print "use buffer"
+            self.buffer.append((self.engine.getCurrentTime(), packet))
             self.bytes += packet.packetsize
             
             self.engine.recorder.record_packet_loss(self, self.engine.getCurrentTime(), 0)
-            self.engine.recorder.record_buffer_occupancy(self, self.engine.getCurrentTime(), self.bytes/PACKET_SIZE)
+            self.engine.recorder.record_buffer_occupancy(self, self.engine.getCurrentTime(), 1.0 * self.bytes/PACKET_SIZE)
         else:
             '''
                 Handle Packet Lost
             '''
             
-           
-            self.engine.recorder.record_packet_loss(self, self.engine.getCurrentTime(), 1)
-            self.engine.recorder.record_buffer_occupancy(self, self.engine.getCurrentTime(), self.bytes/PACKET_SIZE)
-            print 'Packet Lost: [{}],'.format(packet.pck_id)
+            if isinstance(packet, DataPacket):
+                self.engine.recorder.record_packet_loss(self, self.engine.getCurrentTime(), 1)
+                self.engine.recorder.record_buffer_occupancy(self, self.engine.getCurrentTime(), 1.0 * self.bytes/PACKET_SIZE)
+                print 'Packet Lost: [{}],'.format(packet.pck_id)
          
     def pop(self):
         if self.bytes == 0 :
             print "Buffer underflow"
         else:
-            packet = self.buffer.popleft()
+            time, packet = self.buffer.popleft()
+            print "=>",packet.timestamp, self.engine.getCurrentTime(), self.engine.getCurrentTime()-packet.timestamp
             self.bytes -= packet.packetsize
-            self.engine.recorder.record_buffer_occupancy(self, self.engine.getCurrentTime(), self.bytes/PACKET_SIZE)
+            self.engine.recorder.record_buffer_occupancy(self, self.engine.getCurrentTime(), 1.0 * self.bytes/PACKET_SIZE)
             return packet
 
 
@@ -219,25 +240,25 @@ class Router(Element):
         self.rt = {}#key: host ip addre, value:1:cost 2:next hop
         self.rt[address] = (0, address)
     
-    def initialRT(self, all_node_addr):#should be called when creating network 
-        self.defaultLink = self.links[0]
-        for addr in all_node_addr:
-            self.rt[addr] = (float('inf'), self.defaultLink)
-            
-        for link in self.links:#update those host that connect to router through one link
-            if link[1] == 1:
-                if isinstance(link[0].node2, Host):
-                    self.rt[link[0].node2.address] = (1, link[0])
-                
-            if link[1] == 2:
-                if isinstance(link[0].node1, Host):
-                    self.rt[link[0].node1.address] = (1, link[0])
-                
-        self.broadcastRouterPacket()
+#     def initialRT(self, all_node_addr):#should be called when creating network 
+#         self.defaultLink = self.links[0]
+#         for addr in all_node_addr:
+#             self.rt[addr] = (float('inf'), self.defaultLink)
+#             
+#         for link in self.links:#update those host that connect to router through one link
+#             if link[1] == 1:
+#                 if isinstance(link[0].node2, Host):
+#                     self.rt[link[0].node2.address] = (1, link[0])
+#                 
+#             if link[1] == 2:
+#                 if isinstance(link[0].node1, Host):
+#                     self.rt[link[0].node1.address] = (1, link[0])
+#                 
+#         self.broadcastRouterPacket()
                 
     def broadcastRouterPacket(self):
         
-        routerPacket =  RouterPacket(self, self.engine.getCurrentTime(), PACKET_SIZE, copy.copy(self.rt), True)
+        routerPacket =  RouterPacket(self, self.engine.getCurrentTime(), PACKET_SIZE, copy.copy(self.rt), 'update')
         for link in self.links:
             if link[1] == 1:
                 #if isinstance(link[0].node2, Router):
@@ -247,8 +268,8 @@ class Router(Element):
                 link[0].send(routerPacket, self)
                 
     def broadcastRequestPacket(self):
-        
-        routerPacket =  RouterPacket(self, self.engine.getCurrentTime(), PACKET_SIZE, None, False)
+        print "broadcaset Request Packet!!!!!!"
+        routerPacket =  RouterPacket(self, self.engine.getCurrentTime(), PACKET_SIZE, None, 'request')
         for link in self.links:
             if link[1] == 1:
                 #if isinstance(link[0].node2, Router):
@@ -259,8 +280,8 @@ class Router(Element):
                     
     def generateACKRouterPacket(self, packet):
         neigh = packet.source.address  #ackrp use received packet's timestamp? or current Time??
-        
-        ackRouterPacket = RouterPacket(self, packet.timestamp, PACKET_SIZE, copy.copy(self.rt), True)
+        comeCost = self.engine.getCurrentTime() - packet.timestamp
+        ackRouterPacket = RouterPacket(self, self.engine.getCurrentTime(), PACKET_SIZE, comeCost, 'ack_request')
         self.send(neigh, ackRouterPacket)
     
     def send(self, destAddr, packet):      
@@ -268,36 +289,62 @@ class Router(Element):
             if link[1] == 1:
                 if link[0].node2.address == destAddr:
                     link[0].send(packet, self)
+#                     self.packet.setPreHop(self, self.engine.getCurrentTime())
                     break
             if link[1] == 2:
                 if link[0].node1.address == destAddr:
                     link[0].send(packet, self)
+#                     self.packet.setPreHop(self, self.engine.getCurrentTime())
                     break 
                   
     def react_to_packet_receipt(self, event):
         
         packet = event.packet
         if isinstance(packet, DataPacket):
-            print "{} receive data_packet {}, {}".format(self.name, event.packet.acknowledgement, event.packet.pck_id)
-            self.rtRefer(packet)
+#             print "{} receive data_packet {}, {}".format(self.name, event.packet.acknowledgement, event.packet.pck_id)
+            self.receiveData(packet)
             
         if isinstance(packet, RouterPacket):
-            print "{} receive router_packet {}".format(self.name, event.packet.acknowledgement)
-            if packet.acknowledgement == False:
+#             print "{} receive router_packet {}".format(self.name, event.packet.acknowledgement)
+            if packet.type == 'request':
+                print "!!!!!!request:{}=>{}".format(packet.source.address, packet.destination.address)
                 self.generateACKRouterPacket(packet)
-            if packet.acknowledgement == True:
+            if packet.type == 'ack_request':
+                print "~~~~~~~~~ack_request{}=>{}".format(packet.source.address, packet.destination.address)
+                self.measureCost(packet)
+            if packet.type == 'update':
+                print "@@@@@@@@@@update:{}=>{}".format(packet.source.address, packet.destination.address)
                 self.updateRT(packet)
-                
+    
+    def startMeasureCost(self):
+        print "!!!!!!!", self.engine.getCurrentTime()
+        self.broadcastRequestPacket()
+        
+    def measureCost(self, packet):
+        print "!!!!!!!", self.engine.getCurrentTime()
+        neiCost = packet.routerTable
+        
+
+        updateVal = (neiCost, packet.source.address)
+        self.rt[packet.source.address] = updateVal
+        self.broadcastRouterPacket()
+        
+        
+            
     def updateRT(self, neiPacket):#dynamic route distance metric
         neiRT = neiPacket.routerTable
-        neiCost = self.engine.getCurrentTime() - neiPacket.timestamp #RTT
+        neiCost = self.rt[neiPacket.source.address][0]
         flag = False
         for (destAddr, neiVal) in neiRT.items():
+            if destAddr == neiPacket.source.address or destAddr == self.address:
+                continue
             if destAddr in self.rt:
                 if self.rt[destAddr][1] == neiPacket.source.address:#if nexthop is neighRT, must update
                     updateVal = (neiVal[0]+neiCost, neiPacket.source.address)
                     
                     if self.rt[destAddr] != updateVal:
+#                         if neiVal[0]+neiCost > 1.1* self.rt[destAddr][0]:
+                        flag = True
                         self.rt[destAddr] = updateVal 
                 else:
                     if neiVal[0] + neiCost < self.rt[destAddr][0]:
@@ -311,15 +358,18 @@ class Router(Element):
                 self.rt[destAddr] = updateVal
         if flag:
             self.broadcastRouterPacket()
-        print"{}".format(self.name)
-        print self.rt
+#         print"{}".format(self.name)
+        if self.name == 'R1':
+            print self.rt
                     
         
                 
-    def rtRefer(self, packet):
+    def receiveData(self, packet):
+#         preHop = packet.preHop
+#         cost = packet.preTime
         if packet.destination.address in self.rt:
             nextHop = self.rt[packet.destination.address][1]   
-            print "{} is forwarding packet to {}".format(self.name, nextHop)
+#             print "{} is forwarding packet to {}".format(self.name, nextHop)
             self.send(nextHop, packet)
         else:
             self.send(self.links[0], packet)
@@ -327,8 +377,8 @@ class Router(Element):
     
         
     def react_to_routing_table_update(self, event):
-        print "{} start to update rt at [{}]".format(self.name, self.engine.getCurrentTime())
-        self.broadcastRequestPacket() 
+#         print "{} start to update rt at [{}]".format(self.name, self.engine.getCurrentTime())
+        self.startMeasureCost()
         event = Event(self.engine.getCurrentTime() + self.updateTime, self, EVENT_ROUTINGTABLE_UPDATE)
         self.engine.push_event(event)      
   
@@ -399,7 +449,7 @@ class Flow(Element):
     def destinationReceive(self,packet):      
         ack_packet = self.generateAckPacket(packet)
         self.destinationSend(ack_packet)
-        self.engine.recorder.record_flow_rate(self, self.engine.getCurrentTime(), PACKET_SIZE * BIT_TO_PKT_SCALOR)
+        self.engine.recorder.record_flow_rate(self, self.engine.getCurrentTime(), packet.packetsize)
         packet_delay = self.engine.getCurrentTime() - packet.timestamp
        
         self.engine.recorder.record_packet_delay(self, self.engine.getCurrentTime(), packet_delay)

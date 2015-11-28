@@ -8,10 +8,10 @@ class Event:
         self.type = type
 
     def execute(self):
-        print ""
-        print 'Time: [{}],'.format(self.time),
-        print 'Event type: [{}],'.format(self.type),
-        print 'Reactor: [{}] '.format(self.reactor.name)
+#         print ""
+#         print 'Time: [{}],'.format(self.time),
+#         print 'Event type: [{}],'.format(self.type),
+#         print 'Reactor: [{}] '.format(self.reactor.name)
 
         if (self.type == EVENT_LINK_AVAILABLE):
             self.reactor.react_to_link_available(self)

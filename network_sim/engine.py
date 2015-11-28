@@ -32,7 +32,7 @@ class SimEngine:
         while len(self.queue) > 0 and self.curTime < self.MAXTIME:
             
             self.execute_top()
-            print "!!!",self.curTime
+#             print "!!!",self.curTime
             
             
             

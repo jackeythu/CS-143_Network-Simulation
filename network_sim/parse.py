@@ -132,8 +132,11 @@ class parse:
                         self.make_link(name = objectID, 
                                        node1 = n1,
                                        node2 = n2,
-                                       rate = 1024 * 1024 * float(linkPara['rate'] / 8),
+                                       rate = 1.0* 1024 * 1024 * float(linkPara['rate'] )/ 8,
+#                                        rate = float(linkPara['rate']),
+#                                        delay = float(linkPara['delay']),
                                        delay = 0.001 * float(linkPara['delay']),
+#                                        buffer_size =int(linkPara['buffer']))
                                        buffer_size = 1024 * int(linkPara['buffer']))
                          
                     elif objectType == 'Flow':  
@@ -148,6 +151,7 @@ class parse:
                             self.make_flow(name = objectID, 
                                            source = self.hosts[flowPara['src']],
                                            destination = self.hosts[flowPara['dst']],
+#                                            data_amount = int(flowPara['data_amt']),
                                            data_amount = 1024 * int(flowPara['data_amt']),
                                            start_time = float(flowPara['start']))             
                         else:

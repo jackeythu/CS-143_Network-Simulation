@@ -102,10 +102,14 @@ class Record(object):
         start = inventory[0][0]
         sumup = 0; avg = 0
         outputList = []
+        slideSize = interval/2; 
         while start + interval< inventory[-1][0]:
             sumup = 0
+            returnPoint = -1
             while inventory[i][0]< start + interval:
-                
+                if inventory[i][0] > start+slideSize:
+                    if returnPoint == -1:
+                        returnPoint = i
                 if inventory[i-1][0] < start:
                     sumup -= (start-inventory[i-1][0]) * inventory[i-1][1]
                 sumup += (inventory[i][0] - inventory[i-1][0])* inventory[i-1][1]
@@ -115,7 +119,9 @@ class Record(object):
             avg = sumup/interval
             outputList.append((start+interval/2, avg))
             
-            start += interval
+            start += slideSize
+            if returnPoint != -1:
+                i = returnPoint
         return outputList
     
     def plot(self):
