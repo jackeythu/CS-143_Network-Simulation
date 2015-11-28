@@ -132,7 +132,7 @@ class parse:
                         self.make_link(name = objectID, 
                                        node1 = n1,
                                        node2 = n2,
-                                       rate = 1024 * 1024 * float(linkPara['rate']),
+                                       rate = 1024 * 1024 * float(linkPara['rate'] / 8),
                                        delay = 0.001 * float(linkPara['delay']),
                                        buffer_size = 1024 * int(linkPara['buffer']))
                          
