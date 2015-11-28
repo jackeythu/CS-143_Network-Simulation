@@ -307,13 +307,13 @@ class Router(Element):
         if isinstance(packet, RouterPacket):
 #             print "{} receive router_packet {}".format(self.name, event.packet.acknowledgement)
             if packet.type == 'request':
-                print "!!!!!!request:{}=>{}".format(packet.source.address, packet.destination.address)
+#                 print "!!!!!!request: {} => {} ".format(packet.source.address, packet.destination.address)
                 self.generateACKRouterPacket(packet)
             if packet.type == 'ack_request':
-                print "~~~~~~~~~ack_request{}=>{}".format(packet.source.address, packet.destination.address)
+#                 print "~~~~~~~~~ack_request{}=>{}".format(packet.source.address, packet.destination.address)
                 self.measureCost(packet)
             if packet.type == 'update':
-                print "@@@@@@@@@@update:{}=>{}".format(packet.source.address, packet.destination.address)
+#                 print "@@@@@@@@@@update:{}=>{}".format(packet.source.address, packet.destination.address)
                 self.updateRT(packet)
     
     def startMeasureCost(self):

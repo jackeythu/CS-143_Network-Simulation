@@ -46,6 +46,12 @@ def main():
             myFile.write('{}:\n'.format(name))
             for x,y in inventory:
                 myFile.write('{}, {}\n'.format(x, y))
+                
+    with open('buffer_occupancy.txt', 'w') as myFile:
+        for name, inventory in engine.recorder.category[CATE_BUFFER_OCCUPANCY].items():
+            myFile.write('{}:\n'.format(name))
+            for x,y in inventory:
+                myFile.write('{}, {}\n'.format(x, y))
 
     engine.recorder.plot()
     

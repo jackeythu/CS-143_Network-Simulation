@@ -2,7 +2,7 @@
     Constants
 '''
 
-DIR_IMG = 'img_1/'
+DIR_IMG = 'img_2/'
 
 PACKET_SIZE = 1024
 

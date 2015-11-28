@@ -83,9 +83,9 @@ Flow
 	dst		T1
 	data_amt	35
 	start		0.5
-	ID		S2
-	src		T2
-	dst		H2
+	ID		F2
+	src		S2
+	dst		T2
 	data_amt	15
 	start		10
 	ID		F3

@@ -102,7 +102,7 @@ class Record(object):
         start = inventory[0][0]
         sumup = 0; avg = 0
         outputList = []
-        slideSize = interval/2; 
+        slideSize = interval/4; 
         while start + interval< inventory[-1][0]:
             sumup = 0
             returnPoint = -1
@@ -132,7 +132,7 @@ class Record(object):
             for element in self.category[cur_cate]:                
                 cur_string = cur_cate + '_' + element     
     #         print engine.recorder.category[cur_variable]
-                smooth = self.smooth(0.2, self.category[cur_cate][element])
+                smooth = self.smooth(0.1, self.category[cur_cate][element])
 #                 smooth = self.category[cur_cate][element]
                 if smooth:
                     self.draw(smooth, n, cur_string, cur_string, x_unit, y_unit)
