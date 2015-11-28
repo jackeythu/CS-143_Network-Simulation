@@ -23,42 +23,42 @@ Router
 	IP 		192.168.1.4
 
 Link
-	ID 			L0
-	rate		13107200
-    delay		0.01
-	buffer	 	65536
+	ID 		L0
+	rate		12.5
+    	delay		10
+	buffer	 	64
 	connection	H1 R1
 	ID 		L1
-	rate		10485760
-    delay		0.01
-	buffer	 	65536
+	rate		10
+    	delay		10
+	buffer	 	64
 	connection	R1 R2
 	ID 		L2
-	rate		10485760
-    delay		0.01
-	buffer	 	65536
+	rate		10
+    	delay		10
+	buffer	 	64
 	connection	R1 R3
 	ID 		L3
-	rate		10485760
-     	delay		0.01
-	buffer	 	65536
+	rate		10
+     	delay		10
+	buffer	 	64
 	connection	R2 R4
 	ID 		L4
-	rate		10485760
-     	delay		0.01
-	buffer	 	65536
+	rate		10
+     	delay		10
+	buffer	 	64
 	connection	R3 R4
 	ID 		L5
-	rate		13107200
-     	delay		0.01
-	buffer	 	65536
+	rate		12.5
+     	delay		10
+	buffer	 	64
 	connection	R4 H2
 
 Flow
 	ID		F1
 	src		H1
 	dst		H2
-	data_amt	20480
+	data_amt	20
 	start		0.5
 	
 // end
