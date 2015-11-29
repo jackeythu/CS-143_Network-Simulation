@@ -1,0 +1,32 @@
+// testcase0
+
+// FORMAT
+
+// data_amt:    MB
+// start:	s
+
+// rate: 	Mbps
+// delay:	ms
+// buffer:	kB
+
+Host
+	ID 		H1
+	IP 		192.168.0.1
+	ID 		H2
+	IP 		192.168.0.2
+	
+Link
+	ID 		L1
+	rate		10
+     	delay		10
+	buffer	 	64
+	connection	H1 H2
+	
+Flow
+	ID		F1
+	src		H1
+	dst		H2
+	data_amt	20
+	start		1.0
+
+//end
