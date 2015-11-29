@@ -37,10 +37,16 @@ def main():
             Data Visualization
         '''
 #         print engine.recorder.category[CATE_LINK_RATE]
+        
+        
+        with open('1_window_size.txt', 'w') as myFile:
+            for name, inventory in engine.recorder.category[CATE_WINDOW_SIZE].items():
+                myFile.write('{}:\n'.format(name))
+                for x,y in inventory:
+                    myFile.write('{}, {}\n'.format(x, y))
+        
+        
         engine.recorder.plot()
-        
-        
-
         print 'Imgs Plot: Finished!'
 
 

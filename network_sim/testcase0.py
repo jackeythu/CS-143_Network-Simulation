@@ -26,7 +26,7 @@ def main():
         ROUTER_PACKET_GENERATION_INTERVAL: 1.0 s
     '''
     
-    engine = SimEngine(60)
+    engine = SimEngine(30)
     file_name = 'testcase0.txt'
     parse(engine, file_name)
     engine.run()
@@ -47,8 +47,20 @@ def main():
             for x,y in inventory:
                 myFile.write('{}, {}\n'.format(x, y))
                 
-    with open('buffer_occupancy.txt', 'w') as myFile:
-        for name, inventory in engine.recorder.category[CATE_BUFFER_OCCUPANCY].items():
+    with open('flow_rate.txt', 'w') as myFile:
+        for name, inventory in engine.recorder.category[CATE_FLOW_RATE].items():
+            myFile.write('{}:\n'.format(name))
+            for x,y in inventory:
+                myFile.write('{}, {}\n'.format(x, y))
+                
+    with open('packet_loss.txt', 'w') as myFile:
+        for name, inventory in engine.recorder.category[CATE_PACKET_LOSS].items():
+            myFile.write('{}:\n'.format(name))
+            for x,y in inventory:
+                myFile.write('{}, {}\n'.format(x, y))
+                
+    with open('0_window_size.txt', 'w') as myFile:
+        for name, inventory in engine.recorder.category[CATE_WINDOW_SIZE].items():
             myFile.write('{}:\n'.format(name))
             for x,y in inventory:
                 myFile.write('{}, {}\n'.format(x, y))

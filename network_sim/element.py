@@ -71,10 +71,17 @@ class Host(Element):
     def send(self, packet):
         #print "[{}] {} start to send packet".format(self.engine.getCurrentTime(), self.name)
         self.link.send(packet,self)
+#         if isinstance(packet,DataPacket):
+#             with open('L1_buffer1', 'a') as myFile:
+#                 myFile.write('host send packet {} {}\n'.format(packet.pck_id, packet.acknowledgement))
+                
 #         self.packet.setPreHop(self, self.engine.getCurrentTime())
         
     def receive(self, packet):
+        
         if isinstance(packet, DataPacket):
+            with open('L1_buffer1', 'a') as myFile:
+                myFile.write('host receive packet {} {}\n'.format(packet.pck_id, packet.acknowledgement))
             if packet.flow in self.flows:
                 for flow in self.flows:
                     if self == flow.source:
@@ -139,9 +146,9 @@ class Link(Element):
             self.decide()
             
     def decide(self):
-        lg1 = self.buffer1.bytes; lg2 = self.buffer2.bytes
+        lg1 = len(self.buffer1.buffer); lg2 = len(self.buffer2.buffer)
         if lg1 == 0 and lg2 == 0:
-            print self.engine.getCurrentTime(),"buffer1 and buffer2 is empty"
+#             print self.engine.getCurrentTime(),"buffer1 and buffer2 is empty"
             return
         
         self.busy = True
@@ -157,7 +164,7 @@ class Link(Element):
             popper = self.buffer1
             receiver = self.node2
         else:
-            if self.buffer1.buffer[0][0] < self.buffer2.buffer[0][0]:
+            if lg1 > lg2:
                 popper = self.buffer1
                 receiver = self.node2
             else:
@@ -166,6 +173,10 @@ class Link(Element):
      
         
         packet = popper.pop()
+        if isinstance(packet, DataPacket):
+            with open('L1_buffer1', 'a') as myFile:
+    #             myFile.write('!!!{}, {}\n'.format(event.type, event.reactor.name))
+                myFile.write('buffer pop{} {}\n'.format(packet.pck_id, packet.acknowledgement))
         transmissionDeley = 1.0*packet.packetsize / self.rate
         delay = self.propogationDelay + transmissionDeley
         event1 = Event.CreateEventPacketReceipt(self.engine.getCurrentTime() + delay, receiver, packet)
@@ -200,7 +211,8 @@ class Buffer(Element):
     
     def push(self, packet):
         if self.bytes + packet.packetsize <= self.buffer_size:
-#             print "use buffer"
+#             if isinstance(packet, DataPacket):
+#                 print "use buffer", packet.acknowledgement, packet.packetsize
             self.buffer.append((self.engine.getCurrentTime(), packet))
             self.bytes += packet.packetsize
             
@@ -210,7 +222,7 @@ class Buffer(Element):
             '''
                 Handle Packet Lost
             '''
-            
+            print "packet loss"
             if isinstance(packet, DataPacket):
                 self.engine.recorder.record_packet_loss(self, self.engine.getCurrentTime(), 1)
                 self.engine.recorder.record_buffer_occupancy(self, self.engine.getCurrentTime(), 1.0 * self.bytes/PACKET_SIZE)
@@ -221,7 +233,7 @@ class Buffer(Element):
             print "Buffer underflow"
         else:
             time, packet = self.buffer.popleft()
-            print "=>",packet.timestamp, self.engine.getCurrentTime(), self.engine.getCurrentTime()-packet.timestamp
+#             print "=>",packet.timestamp, self.engine.getCurrentTime(), self.engine.getCurrentTime()-packet.timestamp
             self.bytes -= packet.packetsize
             self.engine.recorder.record_buffer_occupancy(self, self.engine.getCurrentTime(), 1.0 * self.bytes/PACKET_SIZE)
             return packet
@@ -449,7 +461,9 @@ class Flow(Element):
     def destinationReceive(self,packet):      
         ack_packet = self.generateAckPacket(packet)
         self.destinationSend(ack_packet)
-        self.engine.recorder.record_flow_rate(self, self.engine.getCurrentTime(), packet.packetsize)
+        # flowrate = 9.4 not 10 because the linkrate is used for data packet and ack packet.
+        # Flow rate is the linkrate used for data packet. Datapacketsize/DatapacketSize+ ackPacketSize = 1024/1088*10
+        self.engine.recorder.record_flow_rate(self, self.engine.getCurrentTime(), packet.packetsize * 8.0 / 1024 / 1024)
         packet_delay = self.engine.getCurrentTime() - packet.timestamp
        
         self.engine.recorder.record_packet_delay(self, self.engine.getCurrentTime(), packet_delay)

@@ -24,7 +24,9 @@ class TcpFast():
                                                 self.windowSize)
         
     def sendNewPackets(self):
-        while len(self.onTheFly) < self.windowSize:
+        count = 2
+        while len(self.onTheFly) < self.windowSize and count >0:
+            count -=1
             if len(self.onTheFly) == 0: 
                 self.sendPacket(self.acknowledgedPacketID+1)
                 self.onTheFly.append(self.acknowledgedPacketID+1)
@@ -91,7 +93,7 @@ class StateMachine(object):
         
     def ACK(self, ackPacket, RTT):
 #         print "ACK!!!!!!!!", ackPacket.pck_id
-        print self.state, self.algorithm.baseRTT, RTT
+#         print self.state, self.algorithm.baseRTT, RTT
         if self.lastAckID == ackPacket.pck_id:
             self.dupTime += 1
         else:

@@ -18,6 +18,7 @@ class parse:
         self.flows = {}
         self.engine = engine
         self.readCase(case)
+        engine.parse = self
     
     def make_host(self, name, IP_address):
         new_host = Host(engine = self.engine, name = name, address = IP_address)
