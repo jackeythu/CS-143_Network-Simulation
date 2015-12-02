@@ -1,5 +1,4 @@
 
-from Errors import *
 from events import *
 from element import *
 from engine import *
